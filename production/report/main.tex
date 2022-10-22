@@ -1,0 +1,260 @@
+\documentclass[a4paper]{article}
+
+\usepackage{INTERSPEECH2021}
+
+\usepackage{cases}
+\usepackage{listings}
+\usepackage[framemethod=tikz]{mdframed}
+
+\hyphenpenalty=10000 % Disables hyphenation.
+
+\title{Procedural terrain generation}
+\name{Willy Jacquet$^1$, Parra Yoan$^2$}
+%The maximum number of authors in the author list is twenty. If the number of contributing authors is more than twenty, they should be listed in a footnote or in acknowledgement section, as appropriate.
+\address{
+  $^1$Author Affiliation\\
+  $^2$Co-author Affiliation}
+\email{author@university.edu, coauthor@company.com}
+
+\begin{document}
+
+\maketitle
+% 
+\begin{abstract}
+%Thus we propose a model base on mathematical logic and it's resulting C++ implementation. The model is comprehensive by extensibility and therefore faster development of procedural terrain by inferring basic function properties and automatically optimizing code.
+
+\textit{Symbolic computation} is seen as a trade-off between expressiveness and performance.
+Metaprogramming can minimize that overhead and enable further optimization. 
+
+
+\end{abstract}
+
+%\noindent\textbf{Index Terms}: speech recognition, human-computer interaction, computational paralinguistics
+
+\section{Introduction}
+
+In this paper we use procedural terrain generation as our primary application and thus tweaked the model for vector manipulation.
+
+\section{State of the art}
+
+\section{Symbolic computation}
+
+Manipulation of \textit{functions} instead of \textit{values}.
+\textit{Functions} are \textit{first class citizens}.
+
+The following model is designed to take advantage of \textit{template metaprogramming} facilities. 
+
+\begin{mdframed}
+This document is thus extended with insight about making a \textit{C++} implementation out of it.
+\end{mdframed}
+
+\subsection{Generic functions}
+
+A \textbf{reduction} predicate is introduced, noted $a \rightarrow b$ ($a$ can be \textit{reduced} to $b$). This predicate is \textit{transitive}.
+
+\begin{mdframed}
+A \textit{function} can be represented as a \textit{type} that holds no \textit{non-static data member}.
+In particular, if two instances of functions share the same type then they refer to the same function.
+\end{mdframed}
+
+A \textbf{tuple} is defined as a \textit{sequence of objects} $(x_1,...,x_n)$.
+
+The \textbf{application} of a function $f$ with $x_1,...,x_n$ is noted $f(x_1,...,x_n)$.
+Generally, the \textit{application of a tuple} $(f_1,...,f_n)$ is defined as:
+\begin{equation}
+(f_1,...,f_n)(x_1,...,x_n) \rightarrow (f_1(x_1,...,x_n),...,f_n(x_1,...,x_n))
+\end{equation}
+If $f(x)$ cannot be further \textit{reduced} ($\neg\exists a, f(x) \rightarrow a$) then for $y_1,...y_n$:
+\begin{equation}
+f(x)(y_1,...y_n) \rightarrow f(x(y_1,...y_n))
+\end{equation}
+
+A \textbf{constant} $c$ is defined as a function that returns itself:
+\begin{equation}
+	c(x_1,...,x_n) \rightarrow c
+\end{equation}
+
+\begin{mdframed}
+A \textit{compile-time constant} can be represented as:
+\begin{lstlisting}
+template<typename Type, Type Value>
+struct constant {};
+\end{lstlisting}
+Special constants ($0$, $1$, $\pi$, $e$, ...) can be introduced as specific symbols since they appear in many (number) sets.
+\begin{lstlisting}
+struct zero {}; struct one {}; ...
+\end{lstlisting}
+\end{mdframed}
+
+Given $i \in \mathbb{N}^*$, the \textbf{$i$-th projection} is a function that returns its $i$-th parameter:
+\begin{numcases}{proj_i(x_1,...,x_n) \rightarrow}
+	x_i          & \text{if $i \leq n$} \\
+	proj_{i - n} & \text{otherwise} \label{partial_projection}
+\end{numcases}
+When the $i$-th projection is applied to the $i$-th parameter of each function, the notation is abbreviated:
+\begin{equation}
+	f(p_0,p_1,...) = f
+\end{equation}
+
+The \textbf{arity} (function) can be defined as follows:
+\begin{equation}
+\begin{split}
+	arity(c) &= 0 \\
+	arity(proj_i) &= i \\
+	arity(f(g_1,...,g_n)) &= max\{arity(g_i)\}_{i \leq n}
+\end{split}
+\end{equation}
+
+\subsection{Arithmetic functions}
+
+\textit{Elementary arithmetic} functions are introduced with their usual definition:
+\begin{equation}
+\begin{split}
+	(f + g)(x)      &\rightarrow f(x) + g(x) \\
+	(f - g)(x)      &\rightarrow f(x) - g(x) \\
+	(f \times g)(x) &\rightarrow f(x) \times g(x) \\
+	(f / g)(x)      &\rightarrow f(x) / g(x)
+\end{split}
+\end{equation}
+\textit{Partial application} is made possible by (\ref{partial_projection}). For example:
+\begin{equation}
+\begin{split}
+	(proj_0 + proj_1)(x) &\rightarrow proj_0(x) + proj_1(x) \\
+	                     &\rightarrow x + proj_0
+\end{split}
+\end{equation}
+\textit{Lazy evaluation} is introduced by establishing:
+\begin{equation}
+\begin{split}
+	0 \times g &\rightarrow 0\\
+	f \times 0 &\rightarrow 0\\
+	0 / g      &\rightarrow 0
+\end{split}
+\end{equation}
+\begin{mdframed}
+This can be implemented by providing \textit{function overloads} having the first or second operand with the zero type.
+\end{mdframed}
+
+The current model can be extended with any usual function.
+Any function that is not mentioned in this section is defined with its usual meaning.
+
+\subsection{Differential calculus}
+
+The \textbf{partial derivative} \textit{with respect to $x$} is introduced for generic functions:
+\begin{align}
+\frac{\partial}{\partial x}(c) &\rightarrow 0 \text{ with $c$ a constant} \\
+\frac{\partial}{\partial proj_j}(proj_i) &\rightarrow
+\begin{cases}{}
+1 & \text{if $i = j$} \\
+0 & \text{otherwise}
+\end{cases} \\
+\frac{\partial}{\partial x}(f(y)) &\rightarrow \frac{\partial}{\partial x}(y) \times \frac{\partial}{\partial x}(f)(y)
+\end{align}
+For arithmetic functions:
+\begin{align}
+\frac{\partial}{\partial x}(f + g) &\rightarrow \frac{\partial}{\partial x}(f) + \frac{\partial}{\partial x}(g) \\
+\frac{\partial}{\partial x}(f - g) &\rightarrow \frac{\partial}{\partial x}(f) - \frac{\partial}{\partial x}(g) \\
+\frac{\partial}{\partial x}(f \times g) &\rightarrow \frac{\partial}{\partial x}(f) \times g + f \times \frac{\partial}{\partial x}(g) \\
+\frac{\partial}{\partial x}(f / g) &\rightarrow \frac{\frac{\partial}{\partial x}(f) \times g - f \times \frac{\partial}{\partial x}(g)}{g \times g}
+\end{align}
+
+\subsection{Computational redundancy}
+
+Suppose that, provided a function $f \times g$, you wish to compute its value \emph{and} partial derivative for an argument $x$.
+
+\subsection{Parallelization}
+
+\subsection{Compilation}
+
+\subsection{Performance}
+
+\section{Common functions}
+
+\subsection{Interpolation}
+
+Provided an interpolant $t \in [0, 1]$.
+Polynomial interpolation with null derivatives is defined as follows:
+\begin{itemize}
+\item linea:r $t$
+\item cubic: $-2t^3 + 3t^2$
+\item quintic: $6t^5 - 15t^4 + 10t^3$
+\end{itemize}
+
+\subsection{Noise functions}
+
+\textit{Coherent noise} can be used to model many natural phenomena and is characterized as follow \cite{libnoise_coherent_noise}:
+\begin{itemize}
+\item \textit{Referential transparency} i.e.\ the same input produces the same output
+\item A small change in the input value will produce a small change in the output value.
+\item A large change in the input value will produce a random change in the output value
+\end{itemize}
+
+\textbf{Value noise} is achieved by interpolating random values on a regular grid along each axis until it is reduced to a single number.
+
+\begin{figure}[h]
+\includegraphics[width=\linewidth]{img/value_noise_2d}
+\caption{2D value noise with quintic interpolation.}
+\end{figure}
+
+
+\begin{lstlisting}[caption=Pseudo code implementation of 2D value noise]
+float noise(v:float[2]):
+  i=floor(v)
+  t=fract(v)
+  return interp(
+    interp(hash(i+[0,0]),hash(i+[0,1]),t[0]),
+    interp(hash(i+[1,0]),hash(i+[1,1]),t[0]),
+    t[1])
+\end{lstlisting}
+With $interp$ being an interpolation function. 
+
+\subsection{Worley noise}
+
+\section{Terrain representation}
+
+A \textbf{terrain} can be defined as a $C^2$ function $\mathbb{R}^2 \rightarrow \mathbb{R}$.
+Therefore it is interpreted 
+
+\subsection{Coloration}
+
+\subsection{Rendering}
+
+\subsection{Implicit representation}
+
+
+
+\section{Results}
+
+\section{Appendix A: Derived functions}
+
+Many usual functions can be defined in terms of those previously introduced.
+Doing so makes inferring most properties (derivative, domain, ...) automatically possible.
+
+\subsection{Generic functions}
+\begin{flalign*}
+swap = (proj_1, proj_0)
+\end{flalign*}
+
+\subsection{Arithmetic functions}
+\begin{equation*}
+\begin{array}{ll}
+opposite    &= 0 - proj_0 \\
+inverse     &= 1 / proj_0 \\
+\\
+translation &= p1(p0 + p2) \\
+scaling     &= p1(p0 \times p2)
+\end{array}
+\end{equation*}
+
+\subsection{Calculus functions}
+\begin{equation*}
+\begin{array}{ll}
+\partial(cos) &= - sin \\
+\partial(sin) &= cos \\
+\end{array}
+\end{equation*}
+
+\bibliographystyle{IEEEtran}
+\bibliography{mybib}
+
+\end{document}
